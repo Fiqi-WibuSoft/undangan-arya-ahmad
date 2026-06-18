@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Undangan Digital Khitanan - Arya Ahmad Pratama</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/jpeg" href="https://cdn.phototourl.com/free/2026-06-17-0f8dac1c-904e-4d1a-9daf-89e440ad606b.jpg">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <style>
+        /* --- RESET & BASE STYLES --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #001122;
+            color: #fdfcf9;
+            overflow-x: hidden;
+            text-align: center;
+        }
+
+        /* --- COVER SCREEN --- */
+        .cover {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(180deg, rgba(0, 19, 38, 0.95) 0%, #001326 100%), 
+                        url('https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=1974&auto=format&fit=crop') no-repeat center center/cover;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            transition: transform 0.8s cubic-bezier(0.77, 0, 0.175, 1);
+            padding: 30px 24px;
+            border: 16px solid #001326;
+            overflow-y: auto;
+        }
+        .cover.slide-up {
+            transform: translateY(-100vh);
+        }
+
+        /* --- LUXURY PHOTO FRAME STYLE --- */
+        .luxury-photo-box {
+            position: relative;
+            width: 210px;
+            height: 280px;
+            margin: 24px auto;
+            background: #001c38;
+            padding: 8px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), 0 0 15px rgba(191, 161, 95, 0.2);
+            border: 1px solid #bfa15f;
+            clip-path: polygon(12px 0px, calc(100% - 12px) 0px, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0px calc(100% - 12px), 0px 12px);
+        }
+        .luxury-photo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            clip-path: polygon(10px 0px, calc(100% - 10px) 0px, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0px calc(100% - 10px), 0px 10px);
+        }
+        
+        .luxury-photo-box::before {
+            content: '';
+            position: absolute;
+            top: 2px; left: 2px; right: 2px; bottom: 2px;
+            border: 1px solid rgba(191, 161, 95, 0.6);
+            pointer-events: none;
+            clip-path: polygon(10px 0px, calc(100% - 10px) 0px, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0px calc(100% - 10px), 0px 10px);
+        }
+
+        .frame-ornament {
+            color: #bfa15f;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 5px 0;
+        }
+        .frame-ornament::before, .frame-ornament::after {
+            content: '';
+            width: 30px;
+            height: 1px;
+            background-color: rgba(191, 161, 95, 0.4);
+        }
+
+        /* --- MAIN INNER CONTAINER --- */
+        .main-content {
+            opacity: 0;
+            max-width: 450px;
+            margin: 0 auto;
+            background: #001326;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            min-height: 100vh;
+            position: relative;
+            transition: opacity 1s ease;
+        }
+        .main-content.show {
+            opacity: 1;
+        }
+
+        /* --- TYPOGRAPHY & ASSETS --- */
+        .gold-label {
+            font-family: 'Cinzel', serif;
+            font-size: 1.8rem;
+            letter-spacing: 4px;
+            color: #bfa15f;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: inline-block;
+            font-weight: 600;
+        }
+        h1.serif-title {
+            font-family: 'Cinzel', serif;
+            font-size: 2.2rem;
+            color: #fdfcf9;
+            font-weight: 400;
+            line-height: 1.3;
+            margin-bottom: 10px;
+        }
+        h1.serif-title span {
+            font-weight: 700;
+            color: #bfa15f;
+            text-shadow: 0 0 8px rgba(191, 161, 95, 0.3);
+        }
+
+        /* --- LUXURY BUTTONS --- */
+        .btn-luxury {
+            background: transparent;
+            color: #fdfcf9;
+            border: 1px solid #bfa15f;
+            padding: 14px 32px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 15px;
+            text-decoration: none;
+            box-shadow: 0 0 10px rgba(191, 161, 95, 0.2);
+        }
+        .btn-luxury:hover {
+            background: #bfa15f;
+            color: #001326;
+            box-shadow: 0 0 15px rgba(191, 161, 95, 0.6);
+        }
+
+        /* --- SECTIONS --- */
+        section {
+            padding: 60px 24px;
+        }
+        .divider {
+            width: 40px;
+            height: 1px;
+            background-color: #bfa15f;
+            margin: 20px auto;
+            box-shadow: 0 0 4px #bfa15f;
+        }
+
+        /* --- COUNTDOWN FLIP --- */
+        .countdown-container {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 32px 0;
+        }
+        .flip-card {
+            background: #001c38;
+            border: 1px solid #bfa15f;
+            border-radius: 6px;
+            padding: 12px 8px;
+            min-width: 70px;
+            box-shadow: 0 0 12px rgba(191, 161, 95, 0.4);
+            position: relative;
+            transition: transform 0.3s;
+        }
+        .flip-card.pulse {
+            transform: scale(1.05);
+        }
+        .flip-card h2 {
+            font-family: 'Cinzel', serif;
+            font-size: 1.8rem;
+            color: #bfa15f;
+            font-weight: 700;
+            text-shadow: 0 0 10px rgba(191, 161, 95, 0.8);
+            margin: 0;
+        }
+        .flip-card p {
+            font-size: 0.65rem;
+            color: #fdfcf9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        /* --- AGENDA CARD --- */
+        .agenda-card {
+            background: #001c38;
+            border: 1px solid rgba(191, 161, 95, 0.3);
+            padding: 30px 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .agenda-card h3 {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            color: #bfa15f;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
+        .agenda-item {
+            margin-bottom: 20px;
+        }
+        .agenda-item i {
+            color: #bfa15f;
+            font-size: 1.1rem;
+            margin-bottom: 6px;
+            text-shadow: 0 0 5px rgba(191, 161, 95, 0.4);
+        }
+        .agenda-item p {
+            font-size: 0.85rem;
+            color: #fdfcf9;
+            line-height: 1.5;
+        }
+
+        /* --- FORM & WISHES BOX --- */
+        .wishes-container {
+            background: #001c38;
+            border: 1px solid rgba(191, 161, 95, 0.3);
+            padding: 24px;
+            text-align: left;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            color: #bfa15f;
+        }
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.85rem;
+            border: 1px solid rgba(191, 161, 95, 0.3);
+            background: #001326;
+            color: #fdfcf9;
+            outline: none;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .form-control:focus {
+            border-color: #bfa15f;
+            box-shadow: 0 0 8px rgba(191, 161, 95, 0.4);
+        }
+        select.form-control option {
+            background: #001c38;
+            color: #fdfcf9;
+        }
+        .wishes-display-area {
+            margin-top: 24px;
+            max-height: 280px;
+            overflow-y: auto;
+            border-top: 1px solid rgba(191, 161, 95, 0.2);
+            padding-top: 8px;
+        }
+        
+        .empty-wishes-notice {
+            text-align: center;
+            padding: 30px 10px;
+            color: #a0a0a0;
+            font-size: 0.8rem;
+            font-style: italic;
+        }
+
+        .wish-item {
+            padding: 12px 0;
+            border-bottom: 1px dashed rgba(191, 161, 95, 0.2);
+            animation: fadeInSoft 0.5s ease-in-out;
+        }
+        @keyframes fadeInSoft {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .wish-item strong {
+            font-size: 0.85rem;
+            color: #fdfcf9;
+            display: block;
+        }
+        .wish-item span {
+            font-size: 0.7rem;
+            color: #bfa15f;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .wish-item p {
+            font-size: 0.85rem;
+            color: #d8d8d8;
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+
+        #music-node {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #001c38;
+            color: #bfa15f;
+            border: 1px solid #bfa15f;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 98;
+            box-shadow: 0 4px 12px rgba(191, 161, 95, 0.3);
+        }
+        .pulse-animation {
+            animation: softPulse 2s infinite;
+        }
+        @keyframes softPulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(191, 161, 95, 0.4); }
+            70% { transform: scale(1.06); box-shadow: 0 0 0 10px rgba(191, 161, 95, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(191, 161, 95, 0); }
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="bg-audio" loop>
+        <source src="https://mp3tourl.com/audio/1780975832279-286bb78b-a249-409f-a27f-4c8f964f71a6.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="music-node" style="display: none;" onclick="handleAudioPlayback()">
+        <i id="music-icon" class="fas fa-music"></i>
+    </div>
+
+    <div class="cover" id="cover-view">
+        <span style="font-family: 'Cinzel', serif; font-size: 0.9rem; letter-spacing: 5px; color: #fdfcf9; font-weight: 700; text-transform: uppercase; margin-bottom: 5px;">Walimatul Khitan</span>
+        
+        <div class="frame-ornament">
+            <i class="fas fa-feather-alt"></i>
+        </div>
+
+        <div class="luxury-photo-box">
+            <img src="https://cdn.phototourl.com/free/2026-06-15-833d274b-6c6f-46c8-b252-8d232bc66417.jpg" alt="Arya Ahmad Pratama">
+        </div>
+
+        <div class="frame-ornament">
+            <i class="star-icon fas fa-star" style="font-size: 0.6rem;"></i>
+        </div>
+
+        <h1 class="serif-title" style="font-size: 2rem; margin-top: 10px; margin-bottom: 25px;">Arya Ahmad<br><span>Pratama</span></h1>
+        <div class="divider" style="margin: 0 auto 25px auto;"></div>
+
+        <button class="btn-luxury" onclick="openMainInvitation()">
+            <i class="far fa-envelope-open"></i> Buka Undangan
+        </button>
+    </div>
+
+    <div class="main-content" id="main-view">
+        
+        <section class="hero-section" style="padding-top: 70px;">
+            <span class="gold-label">ٱلسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ ٱللَّٰهِ وَبَرَكَاتُهُ</span>
+            <h1 class="serif-title" style="font-size: 2.0rem;">walimatul khitan</h1>
+            <div class="divider"></div>
+            <p style="font-size: 0.85rem; color: #d8d8d8; max-width: 320px; margin: 0 auto; line-height: 1.7; font-style: italic;">
+                "Ya Allah, muliakanlah anak/cucu kami ini, panjangkanlah umurnya, terangilah hatinya, teguhkanlah imannya, dan bimbinglah ia ke jalan yang Engkau ridhai."
+            </p>
+        </section>
+
+        <section style="background-color: #001932;">
+            <div class="frame-ornament">
+                <i class="fas fa-crown" style="font-size: 0.7rem;"></i>
+            </div>
+
+            <div class="luxury-photo-box" style="width: 180px; height: 240px; margin-top: 10px;">
+                <img src="https://cdn.phototourl.com/free/2026-06-15-833d274b-6c6f-46c8-b252-8d232bc66417.jpg" alt="Arya Ahmad Pratama">
+            </div>
+
+            <h2 style="font-family: 'Cinzel', serif; font-size: 1.3rem; color: #fdfcf9; letter-spacing: 1px; margin-top: 16px;">Arya Ahmad Pratama</h2>
+            <p style="font-size: 0.8rem; color: #a0a0a0; margin: 6px 0 16px 0;">Putra dari:</p>
+            <h3 style="font-size: 0.95rem; color: #bfa15f; font-weight: 600; letter-spacing: 0.5px;">Bpk Ari & Ibu Ningsih</h3>
+            <p>Cucu Bpk Darwin Rusmanto</p>
+            <p>&</p>
+            <p>Ibu Darisah</p>
+            
+            <p style="margin-top: 28px; font-size: 0.85rem; color: #d8d8d8; line-height: 1.7;">
+                Assalamu’alaikum Wr. Wb. Dengan mengucap syukur atas rahmat Allah SWT, kami bermaksud mengundang Bapak/Ibu/Saudara/i untuk hadir dalam acara tasyakuran khitanan putra kami.
+            </p>
+        </section>
+
+        <section>
+            <span class="gold-label">Waktu & Tempat</span>
+
+            <div class="countdown-container">
+                <div class="flip-card" id="card-days">
+                    <h2 id="days-val">00</h2>
+                    <p>Hari</p>
+                </div>
+                <div class="flip-card" id="card-hours">
+                    <h2 id="hours-val">00</h2>
+                    <p>Jam</p>
+                </div>
+                <div class="flip-card" id="card-mins">
+                    <h2 id="mins-val">00</h2>
+                    <p>Menit</p>
+                </div>
+                <div class="flip-card" id="card-secs">
+                    <h2 id="secs-val">00</h2>
+                    <p>Detik</p>
+                </div>
+            </div>
+
+            <div class="agenda-card">
+                <h3>Detail Acara</h3>
+                
+                <div class="agenda-item">
+                    <i class="far fa-calendar-alt"></i>
+                    <strong>Hari & Tanggal</strong>
+                    <p>Selasa-Rabu, 7-8 Juli 2026</p>
+                </div>
+
+                <div class="agenda-item">
+                    <i class="far fa-clock"></i>
+                    <strong>Waktu Acara</strong>
+                    <p>Pukul 09.00 WIB s/d Selesai</p>
+                </div>
+
+                <div class="agenda-item">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <strong>Lokasi Pelaksanaan</strong>
+                    <p>Rumah Bpk Darwin & Ibu Darisah<br>Jl. Wiryanata Gg. Barokah, 04/05 Karangklesem</p>
+                </div>
+                
+                <a href="https://maps.app.goo.gl/gGjXSdE3nYu2kjpe9" target="_blank" class="btn-luxury" style="margin-top: 10px; width: 100%; justify-content: center; font-size: 0.75rem;">
+                    <i class="fas fa-map-pin"></i> Petunjuk Lokasi
+                </a>
+            </div>
+        </section>
+
+        <section>
+            <span class="gold-label">Ucapan & Doa Restu</span>
+            <p style="font-size: 0.85rem; color: #d8d8d8; margin-bottom: 24px; line-height: 1.6;">
+                ​"Barakallahu fiikum. Selamat atas khitanan putra tercinta. Semoga momentum ini membawa berkah yang melimpah bagi keluarga, dan semoga ananda lekas pulih serta semakin rajin ibadahnya."
+            </p>
+
+            <div class="wishes-container">
+                <form id="wishes-form" onsubmit="submitWish(event)">
+                    <div class="form-group">
+                        <label for="input-name">Nama Anda</label>
+                        <input type="text" id="input-name" class="form-control" placeholder="Contoh: Fiqi Putra" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="input-status">Konfirmasi Kehadiran</label>
+                        <select id="input-status" class="form-control" style="height: 44px;" required>
+                            <option value="Hadir">✓ Ya, Saya Akan Hadir</option>
+                            <option value="Tidak Hadir">✕ Maaf, Tidak Bisa Hadir</option>
+                            <option value="Masih Ragu">Masih Bingung?</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="input-message">Pesan / Ucapan Doa</label>
+                        <textarea id="input-message" class="form-control" rows="4" placeholder="Tulis doa dan ucapan disini..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn-luxury" style="width: 100%; justify-content: center; margin-top: 8px;">
+                        Kirim Ucapan
+                    </button>
+                </form>
+
+                <div class="wishes-display-area" id="wishes-feed">
+                    <div class="empty-wishes-notice" id="empty-notice">
+                        Memuat ucapan...
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section style="padding-bottom: 80px; background-color: #001932;">
+            <p style="font-size: 0.85rem; color: #d8d8d8; line-height: 1.6;">
+                Ungkapan terima kasih yang tulus dari kami atas kehadiran serta doa restu yang Anda berikan kepada putra kami.
+            </p>
+            <p style="font-family: 'Cinzel', serif; font-size: 0.90rem; color: #bfa15f; letter-spacing: 2px; margin-top: 32px; font-weight: 600;">Turut Mengundang.</p>
+            <strong style="color: #fdfcf9; display: block; margin-top: 8px; font-size: 0.9rem; font-weight: 500;">Keluarga Bp. Darwin Rusmanto & Ibu. Darsem</strong>
+        </section>
+
+    </div>
+
+    <script>
+        // --- CONFIGURATION FIREBASE ---
+        // MASUKKAN KONFIGURASI FIREBASE KAMU DI SINI
+        const firebaseConfig = {
+            apiKey: "SEALED_API_KEY",
+            authDomain: "PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://PROJECT_ID-default-rtdb.firebaseio.com",
+            projectId: "PROJECT_ID",
+            storageBucket: "PROJECT_ID.appspot.com",
+            messagingSenderId: "SENDER_ID",
+            appId: "APP_ID"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const wishesRef = database.ref('wishes');
+
+        // --- AMBIL DATA DARI URL PARAMETER ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const guestName = urlParams.get('to');
+        if (guestName) {
+            const nameInput = document.getElementById('input-name');
+            if (nameInput) nameInput.value = guestName;
+        }
+
+        // --- AUDIO CONTROLLER ---
+        const audioNode = document.getElementById('bg-audio');
+        function openMainInvitation() {
+            document.getElementById('cover-view').classList.add('slide-up');
+            document.getElementById('main-view').classList.add('show');
+            document.getElementById('music-node').style.display = 'flex';
+            document.getElementById('music-node').classList.add('pulse-animation');
+            
+            audioNode.play().catch(err => console.log("Audio play deferred."));
+        }
+
+        function handleAudioPlayback() {
+            const musicIcon = document.getElementById('music-icon');
+            if (audioNode.paused) {
+                audioNode.play();
+                musicIcon.className = "fas fa-music";
+                document.getElementById('music-node').classList.add('pulse-animation');
+            } else {
+                audioNode.pause();
+                musicIcon.className = "fas fa-pause";
+                document.getElementById('music-node').classList.remove('pulse-animation');
+            }
+        }
+
+        // --- LOGIC DATABASE (REALTIME UCAPAN) ---
+        // Menampilkan Ucapan Secara Realtime dari Database
+        wishesRef.on('value', (snapshot) => {
+            const feed = document.getElementById('wishes-feed');
+            feed.innerHTML = ''; // Clear feed
+
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                // Ubah object ke array lalu balik urutannya agar yang terbaru di atas
+                const keys = Object.keys(data).reverse(); 
+                
+                keys.forEach((key) => {
+                    const item = data[key];
+                    const badgeIcon = item.status === 'Hadir' ? '✓ Hadir' : (item.status === 'Tidak Hadir' ? '✕ Tidak Hadir' : '? Ragu');
+                    
+                    const wishItem = document.createElement('div');
+                    wishItem.className = 'wish-item';
+                    wishItem.innerHTML = `
+                        <strong>${escapeHtml(item.name)}</strong>
+                        <span>${badgeIcon}</span>
+                        <p>${escapeHtml(item.message)}</p>
+                    `;
+                    feed.appendChild(wishItem);
+                });
+            } else {
+                feed.innerHTML = `
+                    <div class="empty-wishes-notice" id="empty-notice">
+                        Belum ada ucapan. Jadilah yang pertama memberikan doa restu!
+                    </div>
+                `;
+            }
+        });
+
+        // Mengirim Ucapan Baru ke Database
+        function submitWish(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('input-name').value;
+            const status = document.getElementById('input-status').value;
+            const message = document.getElementById('input-message').value;
+            
+            // Push data baru ke Firebase
+            wishesRef.push({
+                name: name,
+                status: status,
+                message: message,
+                timestamp: Date.now()
+            }).then(() => {
+                document.getElementById('input-message').value = '';
+                alert('Terima kasih! Ucapan doa restu Anda telah berhasil ditambahkan.');
+            }).catch((error) => {
+                console.error("Gagal menyimpan data:", error);
+                alert('Maaf, terjadi kesalahan saat mengirim ucapan.');
+            });
+        }
+
+        // Helper untuk mencegah serangan XSS / tag HTML asing
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // --- TARGET COUNTDOWN DATE ---
+        const targetDate = new Date("July 7, 2026 09:00:00").getTime();
+        let oldD = -1, oldH = -1, oldM = -1, oldS = -1;
+
+        const countdownEngine = setInterval(function() {
+            const now = new Date().getTime();
+            const timeDifference = targetDate - now;
+
+            let d = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+            let h = Math.floor((timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            let m = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
+            let s = Math.floor((timeDifference % (1000 * 60)) / 1000);
+
+            if (timeDifference < 0) {
+                clearInterval(countdownEngine);
+                d = 0; h = 0; m = 0; s = 0;
+            }
+
+            const txtD = d < 10 ? "0" + d : d;
+            const txtH = h < 10 ? "0" + h : h;
+            const txtM = m < 10 ? "0" + m : m;
+            const txtS = s < 10 ? "0" + s : s;
+
+            if (d !== oldD) { document.getElementById("days-val").innerText = txtD; triggerPulse("card-days"); oldD = d; }
+            if (h !== oldH) { document.getElementById("hours-val").innerText = txtH; triggerPulse("card-hours"); oldH = h; }
+            if (m !== oldM) { document.getElementById("mins-val").innerText = txtM; triggerPulse("card-mins"); oldM = m; }
+            if (s !== oldS) { document.getElementById("secs-val").innerText = txtS; triggerPulse("card-secs"); oldS = s; }
+
+        }, 1000);
+
+        function triggerPulse(id) {
+            const card = document.getElementById(id);
+            if(card) {
+                card.classList.add("pulse");
+                setTimeout(() => card.classList.remove("pulse"), 300);
+            }
+        }
+    </script>
+</body>
+</html>
